@@ -25,3 +25,8 @@ The app installed in cell phone looks for Arduino101 running the radar service a
 ### Arduino101
 
 The application needs Arduino101 running the radar service. The radar service monitors any object and sends a notification to connected cell phones.
+
+### Credits
+
+Most thanks to Don Coleman for the wonderful ble communication example.<br>
+https://github.com/don/ble-background<br>
