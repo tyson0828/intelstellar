@@ -13,10 +13,19 @@ BLEPeripheral blePeripheral;
 BLEService service("19B10000-E8F2-537E-4F6C-D104768A1214");
 BLEUnsignedLongCharacteristic countCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify);  
 
+// Parallax
+int signal=11;
+int distance;
+unsigned long pulseduration=0;
+unsigned long cm = 0;
+unsigned long inches = 0;
 
+/*
+HC-SR04
 int trigPin = 11;    //Trig - green Jumper
 int echoPin = 12;    //Echo - yellow Jumper
 long duration, cm, inches;
+*/
 
 int led = 9;          // the PWM pin the LED is attached to
 int maxBrightness = 150;
@@ -30,9 +39,12 @@ void setup() {
   Serial.begin (9600);
   while (!Serial);    // wait for the serial port to open
 
+/*
   //Define inputs and outputs
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  */
+  pinMode(signal, OUTPUT);
   
   // declare pin 9 to be an output.
   pinMode(led, OUTPUT);
@@ -56,11 +68,33 @@ void setup() {
   Serial.println(("Bluetooth device active, waiting for connections..."));    
 }
 
+void measureDistance()
+{
+ // set pin as output so we can send a pulse
+ pinMode(signal, OUTPUT);
+// set output to LOW
+ digitalWrite(signal, LOW);
+ delayMicroseconds(5);
+ 
+ // now send the 5uS pulse out to activate Ping)))
+ digitalWrite(signal, HIGH);
+ delayMicroseconds(5);
+ digitalWrite(signal, LOW);
+ 
+ // now we need to change the digital pin
+ // to input to read the incoming pulse
+ pinMode(signal, INPUT);
+ 
+ // finally, measure the length of the incoming pulse
+ pulseduration=pulseIn(signal, HIGH);
+}
+
 void loop()
 {
 /*
   * Ultrasonic sensor handling
   */
+  /*
   // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
   digitalWrite(trigPin, LOW);
@@ -69,15 +103,28 @@ void loop()
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
+
   // Read the signal from the sensor: a HIGH pulse whose
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
   pinMode(echoPin, INPUT);
   duration = pulseIn(echoPin, HIGH);
+*/
 
+// get the raw measurement data from Ping)))
+ measureDistance();
+ 
+ // divide the pulse length by half
+ pulseduration=pulseduration/2; 
+ 
+ // now convert to centimetres. We're metric here people...
+ cm = int(pulseduration/29);
+ inches = int((pulseduration/2)/74);
+ 
   // convert the time into a distance
-  cm = (duration/2) / 29.1;
+ /* cm = (duration/2) / 29.1;
   inches = (duration/2) / 74; 
+*/
 
   Serial.print(inches);
   Serial.print("in, \t");
@@ -136,3 +183,4 @@ void onUnsubscribe(BLECentral& central, BLECharacteristic& characteristic) {
   Serial.print(" unsubscribed from characteristic ");
   Serial.println(characteristic.uuid());
 }
+
