@@ -6,11 +6,16 @@ Stage 1: Ultrasonic sensor to measure the distance.
          If distance is less than 25 inches, beep!
 Stage 2: Added one more Ultrasonic sensor to detect object on the back.
 Stage 3: Send info to to Phone to alert. Vibration & Pop-up alarm.
+Stage 4: Added shock detection.
+Stage 5[Planning]: Need to send e-mail to family
+Stage 6[Planning]: Need to provide different alert image based on the direction(front/back)
+
 */
 
 // BLE WatchApp
 // Runs on Arduino 101 and Arduino boards compatible with https://github.com/sandeepmistry/arduino-BLEPeripheral
 #include <CurieBLE.h>
+#include "CurieIMU.h"
 #include <NewPing.h>
 #define PING_PIN 13
 #define MAX_DISTANCE 200
@@ -53,6 +58,16 @@ void setup() {
   //Serial Port begin
   Serial.begin (9600);
   //while (!Serial);    // wait for the serial port to open
+
+  /* Initialise the IMU */
+  CurieIMU.begin();
+  CurieIMU.attachInterrupt(eventCallback);
+
+  /* Enable Shock Detection */
+  CurieIMU.setDetectionThreshold(CURIE_IMU_SHOCK, 1500); // 1.5g = 1500 mg
+  CurieIMU.setDetectionDuration(CURIE_IMU_SHOCK, 50);   // 50ms
+  CurieIMU.interrupts(CURIE_IMU_SHOCK);
+
 
   //
   //Define inputs and outputs
@@ -268,4 +283,22 @@ unsigned long ping()
   echo = pulseIn(signal, HIGH); //Listen for echo
   ultrasoundValue = (echo / 58.138) * .39; //convert to CM then to inches
   return ultrasoundValue;
+}
+
+static void eventCallback(void)
+{
+  if (CurieIMU.getInterruptStatus(CURIE_IMU_SHOCK)) {
+    if (CurieIMU.shockDetected(X_AXIS, POSITIVE))
+      Serial.println("Negative shock detected on X-axis");
+    if (CurieIMU.shockDetected(X_AXIS, NEGATIVE))
+      Serial.println("Positive shock detected on X-axis");
+    if (CurieIMU.shockDetected(Y_AXIS, POSITIVE))
+      Serial.println("Negative shock detected on Y-axis");
+    if (CurieIMU.shockDetected(Y_AXIS, NEGATIVE))
+      Serial.println("Positive shock detected on Y-axis");
+    if (CurieIMU.shockDetected(Z_AXIS, POSITIVE))
+      Serial.println("Negative shock detected on Z-axis");
+    if (CurieIMU.shockDetected(Z_AXIS, NEGATIVE))
+      Serial.println("Positive shock detected on Z-axis");
+  }
 }
